@@ -3,7 +3,10 @@
  */
 package com.lightbend.akkasample.sample4;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
 
 /**
  * A dummy database that is slow and blocking and occasionally "looses the

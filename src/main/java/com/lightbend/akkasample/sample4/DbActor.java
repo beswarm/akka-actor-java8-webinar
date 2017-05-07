@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2016 Lightbend Inc. <http://www.lightbend.com>
+ * Updated  by Jose Alberto Guastavino
  */
 package com.lightbend.akkasample.sample4;
 
@@ -16,10 +17,13 @@ public class DbActor extends AbstractActor {
   {
     this.connection = new SynchronousDatabaseConnection();
 
-    receive(ReceiveBuilder
-      .match(GetProduct.class, query -> getProduct(query.id))
-      .build()
-    );
+  }
+
+  @Override
+  public Receive createReceive() {
+  	return receiveBuilder()
+  		      .match(GetProduct.class, query -> getProduct(query.id))
+  		      .build();
   }
 
   private void getProduct(long id) {

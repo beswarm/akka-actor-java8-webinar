@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2016 Lightbend Inc. <http://www.lightbend.com>
+ * Updated by Jose Alberto Guastavino
  */
 package com.lightbend.akkasample.sample3;
 

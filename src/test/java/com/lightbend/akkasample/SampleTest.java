@@ -16,11 +16,20 @@ import org.junit.Test;
 public class SampleTest {
 
   public static final class PingActor extends AbstractActor {
-    {
-      receive(ReceiveBuilder
-        .matchEquals("ping", ping -> sender().tell("pong", self()))
-        .build());
-    }
+
+
+	@Override
+	public Receive createReceive() {
+
+		return receiveBuilder()
+					.matchEquals(
+							"ping", 
+							ping -> sender().tell("pong", self()))
+					.build();
+				
+				
+				
+	}
   }
 
 

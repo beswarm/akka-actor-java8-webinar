@@ -1,9 +1,14 @@
 /*
  * Copyright (C) 2016 Lightbend Inc. <http://www.lightbend.com>
+ * Updated  by Jose Alberto Guastavino
  */
 package com.lightbend.akkasample.sample4;
 
-import akka.actor.*;
+import akka.actor.AbstractLoggingActor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.Status;
+import akka.actor.AbstractActor.Receive;
 import akka.event.Logging;
 import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
@@ -13,13 +18,14 @@ import akka.http.javadsl.marshalling.Marshaller;
 import akka.http.javadsl.model.RequestEntity;
 import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.Route;
-import akka.japi.pf.ReceiveBuilder;
+import akka.http.javadsl.server.directives.DebuggingDirectives;
 import akka.stream.ActorMaterializer;
 import akka.stream.Materializer;
 import scala.util.Try;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletionStage;
+
 
 import static com.lightbend.akkasample.sample4.CompletionStageUtils.withRetries;
 import static akka.pattern.PatternsCS.*;
@@ -59,26 +65,26 @@ public class WebServer extends AbstractLoggingActor {
 
     this.database = database;
 
-    final Route route =
-      logRequest("request", Logging.InfoLevel(), () ->
-        path(segment("products").slash(longSegment()), (productId) ->
+    final Route route = get(()->
+    logRequest("request", Logging.InfoLevel(), () ->
+      path(segment("products").slash(longSegment()), (productId) ->
 
-          get(() ->
-            onComplete(lookupProduct(productId), (Try<DbActor.ProductResult> result) -> {
-              if (result.isFailure()) {
-                return complete(StatusCodes.SERVICE_UNAVAILABLE);
+        get(() ->
+          onComplete(lookupProduct(productId), (Try<DbActor.ProductResult> result) -> {
+            if (result.isFailure()) {
+              return complete(StatusCodes.SERVICE_UNAVAILABLE);
+            } else {
+              final DbActor.ProductResult productResult = result.get();
+              if (productResult.product.isPresent()) {
+                return completeOK(productResult.product.get(), productMarshaller);
               } else {
-                final DbActor.ProductResult productResult = result.get();
-                if (productResult.product.isPresent()) {
-                  return completeOK(productResult.product.get(), productMarshaller);
-                } else {
-                  return complete(StatusCodes.NOT_FOUND);
-                }
+                return complete(StatusCodes.NOT_FOUND);
               }
-            })
-          )
+            }
+          })
         )
-      );
+      )
+    ) );
 
 
     Materializer materializer = ActorMaterializer.create(context());
@@ -92,10 +98,7 @@ public class WebServer extends AbstractLoggingActor {
     // starting the http server is async, inform us when it completes, or fails
     pipe(bindingCompletionStage, context().dispatcher()).to(self());
 
-    receive(ReceiveBuilder
-      .match(Status.Failure.class, failure -> onFailure(failure.cause()))
-      .match(ServerBinding.class, this::onStarted)
-      .build());
+    receive();
   }
 
   private void onStarted(ServerBinding binding) {
@@ -125,4 +128,17 @@ public class WebServer extends AbstractLoggingActor {
     // make sure we stop the http server when actor stops
     bindingCompletionStage.thenAccept(ServerBinding::unbind);
   }
+  
+	@Override
+	public Receive createReceive() {
+		return receiveBuilder()
+			      .match(Status.Failure.class, failure -> onFailure(failure.cause()))
+			      .match(ServerBinding.class, this::onStarted)
+			      .build();
+	}  
 }
+
+
+
+
+

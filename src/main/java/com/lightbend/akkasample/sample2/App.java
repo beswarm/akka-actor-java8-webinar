@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2016 Lightbend Inc. <http://www.lightbend.com>
+ * Changes to version 2.5.1 by Jose Alberto Guastavino
  */
 package com.lightbend.akkasample.sample2;
 
@@ -7,10 +8,9 @@ import akka.actor.AbstractLoggingActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.japi.pf.ReceiveBuilder;
+import akka.actor.AbstractActor.Receive;
+
 import com.lightbend.akkasample.StdIn;
-import scala.PartialFunction;
-import scala.runtime.BoxedUnit;
 
 /**
  * actor that changes behavior
@@ -20,12 +20,14 @@ public class App {
   static class Alarm extends AbstractLoggingActor {
     // protocol
     static class Activity {}
+    
     static class Disable {
       private final String password;
       public Disable(String password) {
         this.password = password;
       }
     }
+    
     static class Enable {
       private final String password;
       public Enable(String password) {
@@ -35,22 +37,22 @@ public class App {
 
 
     private final String password;
-    private final PartialFunction<Object, BoxedUnit> enabled;
-    private final PartialFunction<Object, BoxedUnit> disabled;
+    private final Receive enabled;
+    private final Receive disabled;
 
     public Alarm(String password) {
       this.password = password;
 
-      enabled = ReceiveBuilder
+      enabled = receiveBuilder()
         .match(Activity.class, this::onActivity)
         .match(Disable.class, this::onDisable)
         .build();
 
-      disabled = ReceiveBuilder
+      disabled = receiveBuilder()
         .match(Enable.class, this::onEnable)
         .build();
 
-      receive(disabled);
+      //receive(disabled);
     }
 
     private void onEnable(Enable enable) {
@@ -79,8 +81,14 @@ public class App {
     public static Props props(String password) {
       return Props.create(Alarm.class, password);
     }
+
+	@Override
+	public Receive createReceive() {
+		  return disabled;
+	}
   }
 
+  
   public static void main(String[] args) {
     ActorSystem system = ActorSystem.create();
 

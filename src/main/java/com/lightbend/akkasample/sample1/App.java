@@ -1,10 +1,14 @@
 /*
  * Copyright (C) 2016 Lightbend Inc. <http://www.lightbend.com>
+ * Changes to version 2.5.1 by Jose Alberto Guastavino
+ * 
  */
 package com.lightbend.akkasample.sample1;
 
-import akka.actor.*;
-import akka.japi.pf.ReceiveBuilder;
+import akka.actor.AbstractLoggingActor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
 import com.lightbend.akkasample.StdIn;
 
 /**
@@ -13,18 +17,18 @@ import com.lightbend.akkasample.StdIn;
 public class App {
 
   static class Counter extends AbstractLoggingActor {
-    // protocol
+
+	// protocol
     static class Message { }
 
 
     private int counter = 0;
 
-    {
-      receive(ReceiveBuilder
-        .match(Message.class, this::onMessage)
-        .build()
-      );
-    }
+	@Override
+	public Receive createReceive() {
+		return receiveBuilder().match(Message.class, this::onMessage).build();
+	}
+    
 
     private void onMessage(Message message) {
       counter++;

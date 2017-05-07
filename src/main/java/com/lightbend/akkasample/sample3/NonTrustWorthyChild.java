@@ -1,11 +1,12 @@
 /*
  * Copyright (C) 2016 Lightbend Inc. <http://www.lightbend.com>
+ * Updated by Jose Alberto Guastavino
  */
 package com.lightbend.akkasample.sample3;
 
 import akka.actor.AbstractLoggingActor;
 import akka.actor.Props;
-import akka.japi.pf.ReceiveBuilder;
+
 
 public class NonTrustWorthyChild extends AbstractLoggingActor {
 
@@ -13,12 +14,13 @@ public class NonTrustWorthyChild extends AbstractLoggingActor {
 
   private long messages = 0L;
 
-  {
-    receive(ReceiveBuilder
-      .match(Command.class, this::onCommand)
-      .build()
-    );
-  }
+	@Override
+	public Receive createReceive() {
+		log().info("NonTrustWorthyChild.createReceive()");
+
+		return receiveBuilder().match(Command.class, this::onCommand)
+				.build();
+	}
 
   private void onCommand(Command c) {
     messages++;
